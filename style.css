@@ -774,3 +774,101 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 @media (max-width: 768px) {
   .comments-panel { width: 100%; }
 }
+
+/* ===== FORGOT PASSWORD LINK ===== */
+.forgot-link {
+  background: none; border: none;
+  color: var(--accent2); font-family: var(--font);
+  font-size: 0.84rem; cursor: pointer;
+  text-align: center; width: 100%;
+  padding: 8px 0; margin-top: 4px;
+  transition: color 0.2s;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.forgot-link:hover { color: var(--pink2); }
+ 
+/* ===== FIELD HINTS ===== */
+.label-hint {
+  font-size: 0.68rem; color: var(--text-dim);
+  font-weight: 400; text-transform: none; letter-spacing: 0;
+  margin-left: 6px;
+}
+.field-hint {
+  font-size: 0.72rem; color: var(--text-dim);
+  margin-top: 4px; display: block;
+}
+ 
+/* ===== USERNAME STATUS ICON ===== */
+.username-status {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem; pointer-events: none;
+}
+.username-status.ok      { color: var(--cyan); }
+.username-status.error   { color: var(--coral); }
+.username-status.loading { color: var(--text-muted); }
+ 
+/* ===== PASSWORD STRENGTH BAR ===== */
+.password-strength {
+  height: 4px; border-radius: 2px; margin-top: 8px;
+  background: var(--surface2); overflow: hidden; position: relative;
+}
+.password-strength::after {
+  content: ''; position: absolute; left: 0; top: 0; height: 100%;
+  border-radius: 2px; transition: width 0.3s, background 0.3s;
+  width: var(--strength-w, 0%);
+  background: var(--strength-color, var(--coral));
+}
+ 
+/* ===== OTP SCREEN ===== */
+.otp-inputs {
+  display: flex; gap: 10px; justify-content: center; margin: 20px 0;
+}
+.otp-box {
+  width: 48px; height: 56px; border-radius: 10px;
+  background: var(--bg3); border: 2px solid var(--border2);
+  color: var(--text); font-size: 1.5rem; font-weight: 700;
+  font-family: var(--font); text-align: center; outline: none; transition: all 0.2s;
+}
+.otp-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,106,245,0.2); }
+.otp-box.filled { border-color: var(--accent); background: rgba(124,106,245,0.1); }
+ 
+.otp-timer {
+  text-align: center; font-size: 0.82rem; color: var(--text-muted); margin-top: 8px;
+}
+.otp-timer span { color: var(--accent2); font-weight: 600; }
+ 
+/* ===== FORGOT PASSWORD SCREENS ===== */
+.back-to-login {
+  background: none; border: none;
+  color: var(--text-muted); font-family: var(--font);
+  font-size: 0.84rem; cursor: pointer; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0; transition: color 0.2s;
+}
+.back-to-login:hover { color: var(--text); }
+ 
+.new-password-wrap { position: relative; }
+.toggle-pw-btn {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 0.85rem; padding: 4px;
+}
+.toggle-pw-btn:hover { color: var(--text); }
+ 
+/* ===== SUCCESS SCREEN ===== */
+.success-screen {
+  text-align: center; padding: 20px 0;
+}
+.success-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; color: white; margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(64,224,208,0.4);
+  animation: successPop 0.5s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes successPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
