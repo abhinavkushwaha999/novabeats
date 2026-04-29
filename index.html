@@ -37,7 +37,8 @@
     </div>
     <p class="auth-tagline">Music without limits</p>
 
-    <div class="auth-tabs">
+    <!-- ── TABS (hidden when OTP screen is shown) ── -->
+    <div class="auth-tabs" id="auth-tabs">
       <button class="auth-tab active" data-tab="login">Sign In</button>
       <button class="auth-tab" data-tab="register">Register</button>
     </div>
@@ -62,7 +63,6 @@
       <button type="submit" class="btn-primary">
         <span>Sign In</span><i class="fa-solid fa-arrow-right"></i>
       </button>
-      <!-- Forgot password link -->
       <button type="button" id="forgot-password-link" class="forgot-link">
         Forgot password?
       </button>
@@ -117,8 +117,121 @@
         <span>Create Account</span><i class="fa-solid fa-arrow-right"></i>
       </button>
     </form>
-  </div>
-</div>
+
+    <!-- ══════════════════════════════════════════════════════
+         OTP VERIFICATION SCREEN  (hidden by default)
+         shown after register OR when login detects unverified
+    ══════════════════════════════════════════════════════ -->
+    <div id="otp-screen" class="auth-form otp-screen" style="display:none;">
+      <div class="otp-header">
+        <div class="otp-icon-wrap">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+        <h2 class="otp-title">Check your email</h2>
+        <p class="otp-subtitle">
+          We sent a 6-digit code to<br/>
+          <strong id="otp-email-display">your email</strong>
+        </p>
+      </div>
+
+      <!-- 6 individual digit boxes -->
+      <div class="otp-inputs" id="otp-inputs">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+      </div>
+
+      <div id="otp-error" class="auth-error"></div>
+
+      <button type="button" class="btn-primary" id="otp-verify-btn">
+        <span>Verify Email</span><i class="fa-solid fa-shield-check"></i>
+      </button>
+
+      <div class="otp-resend-wrap">
+        <span class="otp-resend-text">Didn't receive it?</span>
+        <button type="button" id="otp-resend-btn" class="resend-btn" disabled>
+          Resend OTP <span id="otp-timer">(60s)</span>
+        </button>
+      </div>
+
+      <button type="button" id="otp-back-btn" class="forgot-link" style="margin-top:8px;">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </button>
+    </div>
+
+    <!-- FORGOT PASSWORD FLOW -->
+    <div id="forgot-screen" class="auth-form" style="display:none;">
+      <div class="otp-header">
+        <div class="otp-icon-wrap">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h2 class="otp-title">Forgot Password</h2>
+        <p class="otp-subtitle">Enter your registered email address</p>
+      </div>
+      <div class="form-group">
+        <div class="input-wrap">
+          <i class="fa-solid fa-envelope input-icon"></i>
+          <input type="email" id="forgot-email" placeholder="you@example.com" required/>
+        </div>
+      </div>
+      <div id="forgot-error" class="auth-error"></div>
+      <button type="button" class="btn-primary" id="forgot-send-btn">
+        <span>Send OTP</span><i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="button" id="forgot-back-btn" class="forgot-link">
+        <i class="fa-solid fa-arrow-left"></i> Back to Sign In
+      </button>
+    </div>
+
+    <div id="reset-otp-screen" class="auth-form" style="display:none;">
+      <div class="otp-header">
+        <div class="otp-icon-wrap"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <h2 class="otp-title">Reset OTP</h2>
+        <p class="otp-subtitle">Enter the code sent to<br/><strong id="reset-email-display">your email</strong></p>
+      </div>
+      <div class="otp-inputs" id="reset-otp-inputs">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"/>
+      </div>
+      <div id="reset-otp-error" class="auth-error"></div>
+      <button type="button" class="btn-primary" id="reset-otp-verify-btn">
+        <span>Verify OTP</span><i class="fa-solid fa-shield-check"></i>
+      </button>
+    </div>
+
+    <div id="new-password-screen" class="auth-form" style="display:none;">
+      <div class="otp-header">
+        <div class="otp-icon-wrap"><i class="fa-solid fa-lock-open"></i></div>
+        <h2 class="otp-title">New Password</h2>
+        <p class="otp-subtitle">Choose a strong new password</p>
+      </div>
+      <div class="form-group">
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" id="new-password" placeholder="min 6 characters" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" id="confirm-password" placeholder="confirm password" required/>
+        </div>
+      </div>
+      <div id="new-password-error" class="auth-error"></div>
+      <button type="button" class="btn-primary" id="reset-password-btn">
+        <span>Reset Password</span><i class="fa-solid fa-check"></i>
+      </button>
+    </div>
+
+  </div><!-- /auth-box -->
+</div><!-- /auth-overlay -->
 
 <!-- TOAST NOTIFICATION -->
 <div id="toast" class="toast hidden">
@@ -146,26 +259,13 @@
       <a href="#" class="nav-item" data-view="albums">
         <div class="nav-icon"><i class="fa-solid fa-record-vinyl"></i></div><span>Albums</span>
       </a>
-
       <a href="#" class="nav-item" data-view="feed">
         <div class="nav-icon"><i class="fa-solid fa-rss"></i></div>
         <span>Feed</span>
       </a>
-      
       <a href="#" class="nav-item" data-view="liked">
         <div class="nav-icon"><i class="fa-solid fa-heart"></i></div>
         <span>Liked Songs</span>
-        <span class="nav-badge" id="liked-count">0</span>
-      </a>
-      
-      <a href="#" class="nav-item" data-view="search">
-        <div class="nav-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-        <span>Search</span>
-      </a>
-
-
-      <a href="#" class="nav-item" data-view="liked">
-        <div class="nav-icon"><i class="fa-solid fa-heart"></i></div><span>Liked Songs</span>
         <span class="nav-badge" id="liked-count">0</span>
       </a>
 
@@ -232,7 +332,6 @@
       <div class="section-header">
         <div class="section-label">All Tracks</div>
         <div class="section-line"></div>
-        <!-- FILTER CHIPS -->
         <div class="filter-chips" id="filter-chips">
           <button class="chip active" data-filter="all">All</button>
           <button class="chip" data-filter="recent">Recent</button>
@@ -258,7 +357,6 @@
         <input type="text" id="search-input" class="search-input" placeholder="Search for tracks, albums, artists..."/>
         <button class="search-clear hidden" id="search-clear"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <!-- FILTER TABS -->
       <div class="search-filter-tabs">
         <button class="s-tab active" data-type="all">All</button>
         <button class="s-tab" data-type="tracks">Tracks</button>
@@ -293,6 +391,24 @@
       </div>
     </section>
 
+    <!-- FEED VIEW -->
+    <section id="view-feed" class="view">
+      <div class="view-header">
+        <h1>Your Feed</h1>
+        <p class="view-sub">Tracks from artists you follow</p>
+      </div>
+      <div class="music-grid" id="feed-grid">
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+      </div>
+    </section>
+
+    <!-- ARTIST PROFILE VIEW -->
+    <section id="view-artist" class="view">
+      <!-- Filled dynamically by openArtistProfile() -->
+    </section>
+
     <!-- ALBUMS VIEW -->
     <section id="view-albums" class="view">
       <div class="view-header">
@@ -309,70 +425,6 @@
         <div class="skeleton-loader"></div>
       </div>
     </section>
-
-    <!-- FEED VIEW -->
-<section id="view-feed" class="view">
-  <div class="view-header">
-    <h1>Your Feed</h1>
-    <p class="view-sub">Tracks from artists you follow</p>
-  </div>
-  <div class="music-grid" id="feed-grid">
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-    <div class="skeleton-loader"></div>
-  </div>
-</section>
- 
-<!-- ARTIST PROFILE VIEW -->
-<section id="view-artist" class="view">
-  <!-- Filled dynamically by openArtistProfile() -->
-</section>
- 
-<!-- LIKED SONGS VIEW -->
-<section id="view-liked" class="view">
-  <div class="view-header liked-header">
-    <div class="liked-hero">
-      <div class="liked-icon-wrap"><i class="fa-solid fa-heart"></i></div>
-      <div>
-        <p class="view-sub">Your Collection</p>
-        <h1>Liked Songs</h1>
-        <p class="liked-count-text" id="liked-count-text">0 songs</p>
-      </div>
-    </div>
-  </div>
-  <div id="liked-list" class="liked-list">
-    <div class="empty-state">
-      <i class="fa-regular fa-heart"></i>
-      <p>Songs you like will appear here</p>
-    </div>
-  </div>
-</section>
- 
-<!-- SEARCH VIEW -->
-<section id="view-search" class="view">
-  <div class="view-header">
-    <h1>Search</h1>
-    <p class="view-sub">Find tracks, albums and artists</p>
-  </div>
-  <div class="search-bar-wrap">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input type="text" id="search-input" class="search-input" placeholder="Search for tracks, albums, artists..."/>
-    <button class="search-clear hidden" id="search-clear"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div class="search-filter-tabs">
-    <button class="s-tab active" data-type="all">All</button>
-    <button class="s-tab" data-type="tracks">Tracks</button>
-    <button class="s-tab" data-type="albums">Albums</button>
-    <button class="s-tab" data-type="artists">Artists</button>
-  </div>
-  <div id="search-results" class="search-results">
-    <div class="search-empty">
-      <div class="search-empty-icon">🎵</div>
-      <p>Start typing to search</p>
-    </div>
-  </div>
-</section>
-
 
     <!-- ALBUM DETAIL VIEW -->
     <section id="view-album-detail" class="view">
@@ -474,7 +526,6 @@
       <div class="player-title" id="player-title">—</div>
       <div class="player-artist" id="player-artist">—</div>
     </div>
-    <!-- LIKE BUTTON IN PLAYER -->
     <button class="player-like-btn" id="player-like-btn" title="Like this song">
       <i class="fa-regular fa-heart"></i>
     </button>

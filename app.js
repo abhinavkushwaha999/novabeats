@@ -813,6 +813,7 @@ function showView(viewId) {
   if (viewId === "albums")       loadAlbums();
   if (viewId === "liked")        renderLikedSongs();
   if (viewId === "create-album") loadTrackChecklist();
+  if (viewId === "feed")         loadFeed();
   if (viewId === "search")       document.getElementById("search-input")?.focus();
 }
 
@@ -883,7 +884,7 @@ function createMusicCard(music, index) {
       <div class="play-overlay"><div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div></div>
     </div>
     <div class="music-card-title">${escHtml(music.title)}</div>
-    <div class="music-card-artist">${escHtml(artistName)}</div>
+    <div class="music-card-artist" data-artist-id="${escHtml(music.artist?._id||"")}" style="cursor:pointer">${escHtml(artistName)}</div>
     <div class="music-card-likes">
       <i class="fa-solid fa-heart" style="font-size:0.7rem;color:var(--pink)"></i>
       <span class="likes-count-${music._id}">${likesCount}</span>
@@ -893,6 +894,7 @@ function createMusicCard(music, index) {
   card.addEventListener("click", () => { playlist=[...allMusics]; playTrack(index, playlist); });
   card.querySelector(".card-like-btn").addEventListener("click", (e) => { e.stopPropagation(); toggleLikeServer(music, card.querySelector(".card-like-btn"), music._id); });
   card.querySelector(".card-share-btn").addEventListener("click", (e) => { e.stopPropagation(); openShareModal(music); });
+  card.querySelector(".music-card-artist").addEventListener("click", (e) => { e.stopPropagation(); if(music.artist?._id) openArtistProfile(music.artist._id); });
   return card;
 }
 
@@ -958,6 +960,98 @@ async function openAlbum(albumId) {
     const item = document.createElement("div"); item.className = "track-item";
     item.innerHTML = `<span class="track-num">${i+1}</span><span class="track-item-title">${escHtml(track.title)}</span><i class="fa-solid fa-play track-play-icon"></i>`;
     item.addEventListener("click", () => {playlist=albumPlaylist;playTrack(i,albumPlaylist);});
+    trackList.appendChild(item);
+  });
+}
+
+// ============================================================
+//  FEED
+// ============================================================
+async function loadFeed() {
+  const grid = document.getElementById("feed-grid");
+  if (!grid) return;
+  grid.innerHTML = `<div class="skeleton-loader"></div>`.repeat(3);
+  const { ok, data } = await api("GET", "/social/feed");
+  grid.innerHTML = "";
+  if (!ok) {
+    grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;
+    return;
+  }
+  const feed = data.feed || [];
+  if (!feed.length) {
+    grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-rss"></i><p>Follow some artists to see their tracks here</p></div>`;
+    return;
+  }
+  feed.forEach((music, i) => {
+    const c = createMusicCard(music, allMusics.findIndex(m => m._id === music._id));
+    c.style.animationDelay = `${i * 0.045}s`;
+    grid.appendChild(c);
+  });
+}
+
+// ============================================================
+//  ARTIST PROFILE
+// ============================================================
+async function openArtistProfile(artistId) {
+  showView("artist");
+  const section = document.getElementById("view-artist");
+  section.innerHTML = `<div class="skeleton-loader" style="height:200px;margin-bottom:16px"></div><div class="skeleton-loader"></div><div class="skeleton-loader"></div>`;
+
+  const { ok, data } = await api("GET", `/social/artist/${artistId}`);
+  if (!ok) {
+    section.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Failed to load artist profile</p></div>`;
+    return;
+  }
+
+  const { artist, tracks } = data;
+  const isFollowing = artist.isFollowing;
+
+  section.innerHTML = `
+    <div class="back-btn-wrap">
+      <button class="back-btn" id="artist-back-btn"><i class="fa-solid fa-arrow-left"></i> Back</button>
+    </div>
+    <div class="album-detail-hero" style="margin-bottom:24px">
+      <div class="album-detail-art" style="font-size:2.5rem;background:linear-gradient(135deg,var(--accent3),var(--pink));color:#fff">
+        ${artist.avatar ? `<img src="${escHtml(artist.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"/>` : artist.username[0].toUpperCase()}
+      </div>
+      <div class="album-detail-info">
+        <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">${artist.role}</p>
+        <h2>${escHtml(artist.username)}</h2>
+        <p id="artist-follower-count">${artist.followers} follower${artist.followers !== 1 ? "s" : ""} • ${tracks.length} track${tracks.length !== 1 ? "s" : ""}</p>
+        ${artist.bio ? `<p style="color:var(--text-muted);font-size:0.88rem;margin-top:6px">${escHtml(artist.bio)}</p>` : ""}
+        <button class="btn-primary" id="follow-btn" style="width:auto;padding:10px 24px;margin-top:14px">
+          <i class="fa-solid fa-${isFollowing ? "user-minus" : "user-plus"}"></i>
+          <span>${isFollowing ? "Unfollow" : "Follow"}</span>
+        </button>
+      </div>
+    </div>
+    <div class="section-header"><div class="section-label">Tracks</div><div class="section-line"></div></div>
+    <div class="track-list" id="artist-track-list"></div>
+  `;
+
+  document.getElementById("artist-back-btn").addEventListener("click", () => history.back() || showView("home"));
+
+  let following = isFollowing;
+  let followerCount = artist.followers;
+  document.getElementById("follow-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("follow-btn");
+    btn.disabled = true;
+    const { ok, data } = await api("POST", `/social/follow/${artistId}`);
+    btn.disabled = false;
+    if (!ok) { showToast(data.message || "Failed", "error"); return; }
+    following = data.following;
+    followerCount = data.followers;
+    btn.innerHTML = `<i class="fa-solid fa-${following ? "user-minus" : "user-plus"}"></i> <span>${following ? "Unfollow" : "Follow"}</span>`;
+    document.getElementById("artist-follower-count").textContent = `${followerCount} follower${followerCount !== 1 ? "s" : ""} • ${tracks.length} track${tracks.length !== 1 ? "s" : ""}`;
+    showToast(following ? `Following ${artist.username}` : `Unfollowed ${artist.username}`);
+  });
+
+  const trackList = document.getElementById("artist-track-list");
+  if (!tracks.length) { trackList.innerHTML = `<p class="muted">No tracks yet</p>`; return; }
+  tracks.forEach((track, i) => {
+    const item = document.createElement("div"); item.className = "track-item";
+    item.innerHTML = `<span class="track-num">${i + 1}</span><span class="track-item-title">${escHtml(track.title)}</span><i class="fa-solid fa-play track-play-icon"></i>`;
+    item.addEventListener("click", () => { playlist = tracks; playTrack(i, tracks); });
     trackList.appendChild(item);
   });
 }
@@ -1037,7 +1131,7 @@ async function runSearch(q) {
       row.innerHTML=`<div class="str-thumb" style="background:linear-gradient(135deg,var(--accent3),var(--pink));color:white;font-size:1.3rem">${n[0].toUpperCase()}</div>
         <div class="str-info"><div class="str-title">${escHtml(n)}</div><div class="str-sub">${at.length} track${at.length!==1?"s":""}</div></div>
         <span class="str-badge">Artist</span>`;
-      row.addEventListener("click",()=>{if(at.length){playlist=at;playTrack(0,at);}});
+      row.addEventListener("click",()=>{if(at.length&&at[0].artist?._id) openArtistProfile(at[0].artist._id); else if(at.length){playlist=at;playTrack(0,at);}});
       r.appendChild(row);
     });
   }
