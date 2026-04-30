@@ -207,6 +207,79 @@ document.getElementById("reg-password")?.addEventListener("input", (e) => {
 });
 
 // ============================================================
+//  REGISTER — Step 1: sends OTP, no login yet
+// ============================================================
+registerForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (regError) regError.textContent = "";
+
+  const name     = document.getElementById("reg-name").value.trim();
+  const username = document.getElementById("reg-username").value.trim();
+  const email    = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+
+  // Frontend validation
+  if (!name)     { regError.textContent = "Please enter your full name"; return; }
+  if (!username) { regError.textContent = "Please choose a username"; return; }
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    regError.textContent = "Username: 3-20 chars, letters/numbers/underscores only"; return;
+  }
+  if (password.length < 6) { regError.textContent = "Password must be at least 6 characters"; return; }
+
+  const btn = registerForm.querySelector("button[type=submit]");
+  btn.disabled = true; btn.querySelector("span").textContent = "Sending OTP...";
+
+  const { ok, data } = await api("POST", "/auth/register", {
+    name, username, email, password, role: selectedRole
+  });
+
+  btn.disabled = false; btn.querySelector("span").textContent = "Create Account";
+
+  if (!ok) { regError.textContent = data.message || "Registration failed"; return; }
+
+  // ✅ Go to OTP screen — no login happens yet
+  pendingUserId = data.userId;
+  pendingEmail  = data.email;
+  showOTPScreen(data.email, "register");
+});
+
+// ============================================================
+//  LOGIN — blocked if not verified
+// ============================================================
+loginForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (loginError) loginError.textContent = "";
+
+  const identifier = document.getElementById("login-identifier").value.trim();
+  const password   = document.getElementById("login-password").value;
+  const isEmail    = identifier.includes("@");
+  const body       = isEmail ? { email: identifier, password } : { username: identifier, password };
+
+  const btn = loginForm.querySelector("button[type=submit]");
+  btn.disabled = true; btn.querySelector("span").textContent = "Signing in...";
+
+  const { ok, data } = await api("POST", "/auth/login", body);
+
+  btn.disabled = false; btn.querySelector("span").textContent = "Sign In";
+
+  if (!ok) {
+    // ✅ Account exists but not verified — show OTP screen
+    if (data.needsVerification) {
+      pendingUserId = data.userId;
+      pendingEmail  = data.email;
+      showOTPScreen(data.email, "register");
+      return;
+    }
+    if (loginError) loginError.textContent = data.message || "Invalid credentials";
+    return;
+  }
+
+  currentUser = data.user;
+  loadLikesFromServer();
+  enterApp();
+});
+
+// ============================================================
 //  FORGOT PASSWORD LINK
 // ============================================================
 document.getElementById("forgot-password-link")?.addEventListener("click", () => {
@@ -1193,4 +1266,4 @@ function hashStr(str){let h=0;for(let i=0;i<str.length;i++)h=(Math.imul(31,h)+st
 //  INIT
 // ============================================================
 setGreeting();
-initAuthListeners();
+restoreAuthBox(); // Build the auth forms into the empty auth-box immediately
