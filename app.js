@@ -1,5 +1,5 @@
 // ============================================================
-//  NovaBeats — Frontend App (Final Fix)
+//  NovaBeats — Frontend App
 //  KEY FIX: enterApp() is ONLY called after:
 //    1. verifyOTP() succeeds (register flow)
 //    2. loginUser() succeeds AND backend confirms isVerified=true
@@ -102,8 +102,6 @@ function setGreeting() {
 
 // ═══════════════════════════════════════════════════════════════
 //  AUTH BOX — ALL screens rendered here
-//  index.html has an EMPTY <div id="auth-box"></div>
-//  This function builds every auth screen dynamically
 // ═══════════════════════════════════════════════════════════════
 function renderAuthBox(screen) {
   const box = document.getElementById("auth-box");
@@ -172,9 +170,10 @@ function renderAuthBox(screen) {
           <label>Password</label>
           <div class="input-wrap">
             <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="reg-pw" placeholder="min 6 characters" autocomplete="new-password"/>
+            <input type="password" id="reg-pw" placeholder="min 6 chars, 1 uppercase, 1 number" autocomplete="new-password"/>
           </div>
           <div class="password-strength" id="pw-strength"></div>
+          <span class="field-hint" id="pw-hint">Must contain uppercase letter and number</span>
         </div>
         <div class="form-group">
           <label>I am a...</label>
@@ -216,7 +215,7 @@ function renderAuthBox(screen) {
       else { st.textContent="✗"; st.className="username-status error"; ht.textContent="Only letters, numbers, underscores (3–20 chars)"; }
     });
 
-    // Password strength
+    // Password strength meter + live hint
     box.querySelector("#reg-pw")?.addEventListener("input", e => {
       const val=e.target.value; let sc=0;
       if(val.length>=6)sc++; if(val.length>=10)sc++;
@@ -224,6 +223,18 @@ function renderAuthBox(screen) {
       const lv=[{w:"0%",c:"transparent"},{w:"25%",c:"#ff6b6b"},{w:"50%",c:"#ffa94d"},{w:"75%",c:"#ffd43b"},{w:"100%",c:"#40e0d0"}][Math.min(sc,4)];
       const bar=box.querySelector("#pw-strength");
       if(bar){bar.style.setProperty("--strength-w",lv.w);bar.style.setProperty("--strength-color",lv.c);}
+      // ── Live password rule hints ──
+      const hint = box.querySelector("#pw-hint");
+      if (hint) {
+        const hasUpper = /[A-Z]/.test(val);
+        const hasNum   = /[0-9]/.test(val);
+        const hasLen   = val.length >= 6;
+        if (!val) { hint.textContent="Must contain uppercase letter and number"; hint.style.color=""; return; }
+        if (!hasLen)   { hint.textContent="Too short (min 6 characters)"; hint.style.color="#ff6b6b"; return; }
+        if (!hasUpper) { hint.textContent="Add at least one uppercase letter"; hint.style.color="#ffa94d"; return; }
+        if (!hasNum)   { hint.textContent="Add at least one number"; hint.style.color="#ffa94d"; return; }
+        hint.textContent="Password looks strong ✓"; hint.style.color="#40e0d0";
+      }
     });
 
     // Forgot password link
@@ -243,7 +254,6 @@ function renderAuthBox(screen) {
       const { ok, data } = await api("POST","/auth/login", isEmail?{email:id,password:pw}:{username:id,password:pw});
       btn.disabled=false; btn.querySelector("span").textContent="Sign In";
       if (!ok) {
-        // ✅ Backend blocked — account not verified
         if (data.needsVerification) {
           _pendingUserId = data.userId;
           _pendingEmail  = data.email;
@@ -253,7 +263,6 @@ function renderAuthBox(screen) {
         errEl.textContent = data.message || "Invalid credentials";
         return;
       }
-      // ✅ Backend confirmed isVerified=true — safe to enter app
       currentUser = data.user;
       loadLikesFromServer();
       enterApp();
@@ -273,7 +282,11 @@ function renderAuthBox(screen) {
       if (!username) { errEl.textContent="Please choose a username"; return; }
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) { errEl.textContent="Username: 3-20 chars, letters/numbers/underscores only"; return; }
       if (!email)    { errEl.textContent="Please enter your email"; return; }
-      if (pw.length < 6) { errEl.textContent="Password must be at least 6 characters"; return; }
+
+      // ── UPDATED: match the new backend password rules ──
+      if (pw.length < 6)          { errEl.textContent="Password must be at least 6 characters"; return; }
+      if (!/[A-Z]/.test(pw))      { errEl.textContent="Password must contain at least one uppercase letter"; return; }
+      if (!/[0-9]/.test(pw))      { errEl.textContent="Password must contain at least one number"; return; }
 
       const btn = e.submitter;
       btn.disabled=true; btn.querySelector("span").textContent="Sending OTP...";
@@ -282,7 +295,6 @@ function renderAuthBox(screen) {
 
       if (!ok) { errEl.textContent = data.message||"Registration failed"; return; }
 
-      // ✅ Store pending — show OTP screen — DO NOT call enterApp()
       _pendingUserId = data.userId;
       _pendingEmail  = data.email;
       renderAuthBox("otp-register");
@@ -362,18 +374,15 @@ function renderAuthBox(screen) {
       btn.disabled=true; btn.querySelector("span").textContent="Verifying...";
 
       if (!isReset) {
-        // ── Register OTP ──
         const { ok, data } = await api("POST","/auth/verify-otp",{userId:_pendingUserId,otp});
         btn.disabled=false; btn.querySelector("span").textContent="Verify OTP";
         if (!ok) { errEl.textContent=data.message; return; }
         clearInterval(timer);
-        // ✅ Only now enter the app — OTP confirmed by backend
         currentUser = data.user;
         loadLikesFromServer();
         enterApp();
         showToast("Email verified! Welcome to NovaBeats 🎵");
       } else {
-        // ── Reset OTP ──
         const { ok, data } = await api("POST","/auth/verify-reset-otp",{userId:_pendingUserId,otp});
         btn.disabled=false; btn.querySelector("span").textContent="Verify OTP";
         if (!ok) { errEl.textContent=data.message; return; }
@@ -457,10 +466,11 @@ function renderAuthBox(screen) {
         <label>New Password</label>
         <div class="input-wrap" style="position:relative">
           <i class="fa-solid fa-lock input-icon"></i>
-          <input type="password" id="new-pw" placeholder="min 6 characters" autocomplete="new-password"/>
+          <input type="password" id="new-pw" placeholder="min 6 chars, 1 uppercase, 1 number" autocomplete="new-password"/>
           <button type="button" id="toggle-pw" class="toggle-pw-btn"><i class="fa-solid fa-eye"></i></button>
         </div>
         <div class="password-strength" id="new-pw-strength"></div>
+        <span class="field-hint" id="reset-pw-hint">Must contain uppercase letter and number</span>
       </div>
       <div class="form-group">
         <label>Confirm Password</label>
@@ -484,11 +494,23 @@ function renderAuthBox(screen) {
       if(val.length>=6)sc++; if(val.length>=10)sc++; if(/[A-Z]/.test(val))sc++; if(/[0-9]/.test(val))sc++; if(/[^a-zA-Z0-9]/.test(val))sc++;
       const lv=[{w:"0%",c:"transparent"},{w:"25%",c:"#ff6b6b"},{w:"50%",c:"#ffa94d"},{w:"75%",c:"#ffd43b"},{w:"100%",c:"#40e0d0"}][Math.min(sc,4)];
       const bar=box.querySelector("#new-pw-strength"); if(bar){bar.style.setProperty("--strength-w",lv.w);bar.style.setProperty("--strength-color",lv.c);}
+      // Live hint
+      const hint=box.querySelector("#reset-pw-hint");
+      if(hint){
+        if(!val){hint.textContent="Must contain uppercase letter and number";hint.style.color="";return;}
+        if(val.length<6){hint.textContent="Too short (min 6 characters)";hint.style.color="#ff6b6b";return;}
+        if(!/[A-Z]/.test(val)){hint.textContent="Add at least one uppercase letter";hint.style.color="#ffa94d";return;}
+        if(!/[0-9]/.test(val)){hint.textContent="Add at least one number";hint.style.color="#ffa94d";return;}
+        hint.textContent="Password looks strong ✓";hint.style.color="#40e0d0";
+      }
     });
     box.querySelector("#reset-btn").addEventListener("click", async ()=>{
       const np=box.querySelector("#new-pw").value, cp=box.querySelector("#confirm-pw").value;
       const errEl=box.querySelector("#reset-err");
+      // ── UPDATED: match new backend password rules ──
       if(np.length<6){errEl.textContent="Password must be at least 6 characters";return;}
+      if(!/[A-Z]/.test(np)){errEl.textContent="Password must contain at least one uppercase letter";return;}
+      if(!/[0-9]/.test(np)){errEl.textContent="Password must contain at least one number";return;}
       if(np!==cp){errEl.textContent="Passwords do not match";return;}
       const btn=box.querySelector("#reset-btn"); btn.disabled=true; btn.querySelector("span").textContent="Resetting...";
       const{ok,data}=await api("POST","/auth/reset-password",{resetToken:_resetToken,newPassword:np});
@@ -515,6 +537,67 @@ function renderAuthBox(screen) {
     box.querySelector("#go-login").addEventListener("click", ()=>renderAuthBox("main"));
     return;
   }
+
+  // ── PROFILE EDIT SCREEN (NEW) ─────────────────────────────
+  if (screen === "profile") {
+    box.innerHTML = `
+      <div class="auth-logo">
+        <div class="logo-mark"><span class="logo-n">N</span></div>
+        <div class="logo-text"><span class="logo-nova">Nova</span><span class="logo-beats">Beats</span></div>
+      </div>
+      <button class="back-to-login" id="profile-back"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:18px">Edit Profile</h2>
+      <div class="form-group">
+        <label>Display Name</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-id-card input-icon"></i>
+          <input type="text" id="profile-name" placeholder="Your display name" value="${escHtml(currentUser?.name||"")}"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Bio <span class="label-hint">max 300 chars</span></label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-pen input-icon"></i>
+          <input type="text" id="profile-bio" placeholder="Tell the world about yourself..." value="${escHtml(currentUser?.bio||"")}"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Avatar URL <span class="label-hint">paste an image link</span></label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-image input-icon"></i>
+          <input type="url" id="profile-avatar" placeholder="https://..." value="${escHtml(currentUser?.avatar||"")}"/>
+        </div>
+      </div>
+      <div id="profile-err" class="auth-error" style="margin:8px 0"></div>
+      <div id="profile-success" class="auth-success" style="margin:8px 0"></div>
+      <button class="btn-primary" id="profile-save-btn" style="margin-top:12px">
+        <span>Save Changes</span><i class="fa-solid fa-floppy-disk"></i>
+      </button>
+    `;
+    box.querySelector("#profile-back").addEventListener("click", ()=>{
+      document.getElementById("auth-overlay").classList.remove("active");
+    });
+    box.querySelector("#profile-save-btn").addEventListener("click", async ()=>{
+      const name   = box.querySelector("#profile-name").value.trim();
+      const bio    = box.querySelector("#profile-bio").value.trim();
+      const avatar = box.querySelector("#profile-avatar").value.trim();
+      const errEl  = box.querySelector("#profile-err");
+      const sucEl  = box.querySelector("#profile-success");
+      errEl.textContent=""; sucEl.textContent="";
+      const btn=box.querySelector("#profile-save-btn"); btn.disabled=true; btn.querySelector("span").textContent="Saving...";
+      const{ok,data}=await api("PATCH","/auth/profile",{name,bio,avatar});
+      btn.disabled=false; btn.querySelector("span").textContent="Save Changes";
+      if(!ok){errEl.textContent=data.message||"Failed to update profile";return;}
+      // Update local currentUser state
+      currentUser = {...currentUser, ...data.user};
+      // Update sidebar display
+      document.getElementById("sidebar-username").textContent   = currentUser.username;
+      document.getElementById("user-avatar-letter").textContent = currentUser.username[0].toUpperCase();
+      sucEl.textContent="Profile updated successfully ✓";
+      showToast("Profile updated! ✓");
+    });
+    return;
+  }
 }
 
 // ── Logout ────────────────────────────────────────────────────
@@ -525,13 +608,11 @@ document.getElementById("logout-btn")?.addEventListener("click", async ()=>{
   document.getElementById("app").classList.add("hidden");
   document.getElementById("player-bar").classList.add("hidden");
   document.getElementById("auth-overlay").classList.add("active");
-  // Clear pending state
   _pendingUserId=null; _pendingEmail=null; _resetToken=null;
   renderAuthBox("main");
 });
 
 // ── Enter App ─────────────────────────────────────────────────
-// ✅ This is the ONLY gateway into the app
 function enterApp() {
   document.getElementById("auth-overlay").classList.remove("active");
   document.getElementById("app").classList.remove("hidden");
@@ -540,6 +621,12 @@ function enterApp() {
   document.getElementById("sidebar-role").textContent       = currentUser.role;
   document.getElementById("user-avatar-letter").textContent = currentUser.username[0].toUpperCase();
   document.querySelectorAll(".artist-only").forEach(el=>el.classList.toggle("hidden",currentUser.role!=="artist"));
+  // ── Add click on user pill to open profile editor ──
+  document.getElementById("user-pill")?.addEventListener("click", e=>{
+    if(e.target.closest("#logout-btn"))return;
+    document.getElementById("auth-overlay").classList.add("active");
+    renderAuthBox("profile");
+  });
   loadMusics();
   showView("home");
 }
@@ -567,10 +654,11 @@ document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
 }));
 
 // ── Music ─────────────────────────────────────────────────────
+// UPDATED: backend now returns { musics, pagination } — we read data.musics same as before
 async function loadMusics() {
   const grid=document.getElementById("music-grid"); if(!grid)return;
   grid.innerHTML=`<div class="skeleton-loader"></div>`.repeat(5);
-  const{ok,data}=await api("GET","/music"); grid.innerHTML="";
+  const{ok,data}=await api("GET","/music?limit=50"); grid.innerHTML="";
   if(!ok){grid.innerHTML=`<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${data.message}</p></div>`;return;}
   allMusics=data.musics||[]; playlist=[...allMusics];
   if(allMusics.length){
@@ -670,6 +758,7 @@ async function openAlbum(albumId) {
 }
 
 // ── Feed ──────────────────────────────────────────────────────
+// UPDATED: backend now returns { feed, pagination } — we read data.feed same as before
 async function loadFeed() {
   const grid=document.getElementById("feed-grid"); if(!grid)return;
   grid.innerHTML=`<div class="skeleton-loader"></div>`.repeat(3);
@@ -681,10 +770,12 @@ async function loadFeed() {
 }
 
 // ── Search ────────────────────────────────────────────────────
+// UPDATED: now calls the real backend /music/search?q= endpoint
+// Falls back to local filtering for albums and artists (no backend search for those)
 const si=document.getElementById("search-input");
 const sc=document.getElementById("search-clear");
 let sd=null;
-si?.addEventListener("input",()=>{const q=si.value.trim();sc?.classList.toggle("hidden",!q);clearTimeout(sd);sd=setTimeout(()=>runSearch(q),280);});
+si?.addEventListener("input",()=>{const q=si.value.trim();sc?.classList.toggle("hidden",!q);clearTimeout(sd);sd=setTimeout(()=>runSearch(q),350);});
 sc?.addEventListener("click",()=>{si.value="";sc.classList.add("hidden");const r=document.getElementById("search-results");if(r)r.innerHTML=`<div class="search-empty"><div class="search-empty-icon">🎵</div><p>Start typing to search</p></div>`;});
 document.querySelectorAll(".s-tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".s-tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");searchFilter=t.dataset.type;runSearch(si?.value.trim()||"");}));
 
@@ -692,17 +783,35 @@ async function runSearch(q) {
   const r=document.getElementById("search-results"); if(!r)return;
   if(!q){r.innerHTML=`<div class="search-empty"><div class="search-empty-icon">🎵</div><p>Start typing to search</p></div>`;return;}
   r.innerHTML=`<div class="skeleton-loader" style="height:60px;margin-bottom:8px"></div>`.repeat(3);
-  const[mR,aR]=await Promise.all([api("GET","/music"),api("GET","/music/albums")]);
-  const musics=mR.ok?(mR.data.musics||[]):[], albums=aR.ok?(aR.data.albums||[]):[], ql=q.toLowerCase();
-  const mt=musics.filter(m=>m.title.toLowerCase().includes(ql)||(m.artist?.username||"").toLowerCase().includes(ql));
-  const ma=albums.filter(a=>a.title.toLowerCase().includes(ql)||(a.artist?.username||"").toLowerCase().includes(ql));
-  const names=[...new Set(musics.map(m=>m.artist?.username).filter(Boolean))].filter(a=>a.toLowerCase().includes(ql));
+
+  // ── Call backend search for tracks (real search endpoint) ──
+  // Also fetch albums for album/artist tab filtering
+  const[sR,aR]=await Promise.all([
+    api("GET",`/music/search?q=${encodeURIComponent(q)}&limit=30`),
+    api("GET","/music/albums"),
+  ]);
+
+  const musics = sR.ok ? (sR.data.musics||[]) : [];
+  const albums = aR.ok ? (aR.data.albums||[]) : [];
+  const ql = q.toLowerCase();
+
+  // Filter albums client-side (no backend search for albums yet)
+  const ma = albums.filter(a=>a.title.toLowerCase().includes(ql)||(a.artist?.username||"").toLowerCase().includes(ql));
+
+  // Build artist list from search results
+  const names=[...new Set(musics.map(m=>m.artist?.username).filter(Boolean))];
+
   r.innerHTML="";
-  if(!mt.length&&!ma.length&&!names.length){r.innerHTML=`<div class="search-empty"><div class="search-empty-icon">🔍</div><p>No results for "${escHtml(q)}"</p></div>`;return;}
+  if(!musics.length&&!ma.length&&!names.length){
+    r.innerHTML=`<div class="search-empty"><div class="search-empty-icon">🔍</div><p>No results for "${escHtml(q)}"</p></div>`;return;
+  }
+
   const mkLbl=t=>{const d=document.createElement("div");d.className="search-section-title";d.textContent=t;return d;};
-  if((searchFilter==="all"||searchFilter==="tracks")&&mt.length){
+
+  if((searchFilter==="all"||searchFilter==="tracks")&&musics.length){
     r.appendChild(mkLbl("Tracks"));
-    mt.forEach(track=>{
+    musics.forEach(track=>{
+      // Find index in allMusics for playback continuity
       const idx=allMusics.findIndex(m=>m._id===track._id);
       const E=["🎵","🎶","🎸","🎹","🥁","🎷","🎺","🎻","🎼","🎤"];
       const isL=!!likedSongs[track._id];
@@ -711,11 +820,17 @@ async function runSearch(q) {
         <div class="str-info"><div class="str-title">${escHtml(track.title)}</div><div class="str-sub">${escHtml(track.artist?.username||"")}</div></div>
         <span class="str-badge">Track</span>
         <button class="card-like-btn ${isL?"liked":""}" style="opacity:1;position:static;width:32px;height:32px"><i class="fa-${isL?"solid":"regular"} fa-heart"></i></button>`;
-      row.addEventListener("click",e=>{if(e.target.closest(".card-like-btn"))return;playlist=[...allMusics];playTrack(idx>=0?idx:0,playlist);});
+      row.addEventListener("click",e=>{
+        if(e.target.closest(".card-like-btn"))return;
+        // Play from allMusics list if found, otherwise play just this track
+        if(idx>=0){playlist=[...allMusics];playTrack(idx,playlist);}
+        else{playlist=[track];playTrack(0,playlist);}
+      });
       row.querySelector(".card-like-btn").addEventListener("click",e=>{e.stopPropagation();toggleLike(track,row.querySelector(".card-like-btn"));});
       r.appendChild(row);
     });
   }
+
   if((searchFilter==="all"||searchFilter==="albums")&&ma.length){
     r.appendChild(mkLbl("Albums"));
     ma.forEach(album=>{
@@ -728,6 +843,7 @@ async function runSearch(q) {
       r.appendChild(row);
     });
   }
+
   if((searchFilter==="all"||searchFilter==="artists")&&names.length){
     r.appendChild(mkLbl("Artists"));
     names.forEach(name=>{
@@ -843,9 +959,10 @@ document.getElementById("upload-form")?.addEventListener("submit",async e=>{
 });
 
 // ── Create Album ──────────────────────────────────────────────
+// UPDATED: reads data.musics (pagination-safe)
 async function loadTrackChecklist() {
   const list=document.getElementById("track-checklist"); list.innerHTML=`<p class="muted">Loading...</p>`;
-  const{ok,data}=await api("GET","/music"); if(ok)allMusics=data.musics||[];
+  const{ok,data}=await api("GET","/music?limit=50"); if(ok)allMusics=data.musics||[];
   list.innerHTML="";
   if(!allMusics.length){list.innerHTML=`<p class="muted">Upload some tracks first.</p>`;return;}
   allMusics.forEach(t=>{const it=document.createElement("label");it.className="track-check-item";it.innerHTML=`<input type="checkbox" value="${t._id}"/><span>${escHtml(t.title)}</span>`;list.appendChild(it);});
@@ -921,6 +1038,6 @@ function fmtTime(s){if(isNaN(s))return"0:00";return`${Math.floor(s/60)}:${String
 function escHtml(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
 
-// ── INIT — runs on page load ──────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────
 setGreeting();
-renderAuthBox("main"); // ← Builds the auth UI fresh every page load
+renderAuthBox("main");
