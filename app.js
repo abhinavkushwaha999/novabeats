@@ -652,8 +652,9 @@ document.getElementById("logout-btn")?.addEventListener("click", async () => {
   renderAuth("main");
 });
 
-// ── Profile button ─────────────────────────────────────────────
+// Profile buttons (desktop header + mobile topbar)
 document.getElementById("profile-btn")?.addEventListener("click", () => renderAuth("profile"));
+document.getElementById("profile-btn-desk")?.addEventListener("click", () => renderAuth("profile"));
 document.getElementById("user-card")?.addEventListener("click", e => {
   if (e.target.closest("#logout-btn")) return;
   renderAuth("profile");
@@ -667,7 +668,9 @@ function enterApp() {
   document.getElementById("app").classList.remove("hidden");
   setGreeting();
   updateSidebarUser();
-  document.querySelectorAll(".artist-only").forEach(el => el.classList.toggle("hidden", currentUser.role !== "artist"));
+  document.querySelectorAll(".artist-only").forEach(el =>
+    el.classList.toggle("hidden", currentUser.role !== "artist")
+  );
   loadMusics();
   showView("home");
 }
@@ -676,17 +679,24 @@ function updateSidebarUser() {
   if (!currentUser) return;
   const un = document.getElementById("uc-name");
   const ur = document.getElementById("uc-role");
-  const ua = document.getElementById("uc-avatar");
+  const ua = document.getElementById("uc-avatar"); // sidebar avatar (id="uc-av" in HTML mapped via uc-avatar class)
+  const uav= document.getElementById("uc-av");     // new HTML ID
   const gn = document.getElementById("greeting-name");
+
   if (un) un.textContent = currentUser.username;
   if (ur) ur.textContent = currentUser.role;
-  if (ua) {
+
+  // Support both old and new avatar element IDs
+  const avatarEl = ua || uav;
+  if (avatarEl) {
     if (currentUser.avatar) {
-      ua.style.backgroundImage=`url(${currentUser.avatar})`;
-      ua.style.backgroundSize="cover"; ua.textContent="";
+      avatarEl.style.backgroundImage = `url(${currentUser.avatar})`;
+      avatarEl.style.backgroundSize  = "cover";
+      avatarEl.style.backgroundPosition = "center";
+      avatarEl.textContent = "";
     } else {
-      ua.style.backgroundImage="";
-      ua.textContent = currentUser.username[0].toUpperCase();
+      avatarEl.style.backgroundImage = "";
+      avatarEl.textContent = currentUser.username[0].toUpperCase();
     }
   }
   if (gn) gn.textContent = currentUser.name || currentUser.username;
@@ -1390,13 +1400,17 @@ function timeAgo(dateStr) {
 //  MOBILE MENU BUTTON (shows/hides sidebar on mobile)
 // ════════════════════════════════════════════════════════════════
 document.getElementById("mobile-menu-btn")?.addEventListener("click", () => {
-  const sidebar=document.getElementById("sidebar");
-  const isOpen=sidebar.style.display==="flex";
-  sidebar.style.display=isOpen?"":"flex";
-  sidebar.style.position=isOpen?"":"fixed";
-  sidebar.style.zIndex=isOpen?"":"200";
-  sidebar.style.width=isOpen?"":"80vw";
-  sidebar.style.maxWidth=isOpen?"":"300px";
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("mob-open");
+});
+document.addEventListener("click", e => {
+  const sidebar = document.getElementById("sidebar");
+  const btn = document.getElementById("mobile-menu-btn");
+  if (sidebar?.classList.contains("mob-open") &&
+      !sidebar.contains(e.target) &&
+      e.target !== btn && !btn?.contains(e.target)) {
+    sidebar.classList.remove("mob-open");
+  }
 });
 
 // ════════════════════════════════════════════════════════════════

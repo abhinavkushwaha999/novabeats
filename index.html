@@ -5,197 +5,201 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NovaBeats</title>
   <link rel="stylesheet" href="style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Clash+Display:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body>
 
-<!-- IMMERSIVE 3D BACKGROUND -->
-<div class="scene" id="scene">
+<!-- ANIMATED BG -->
+<div class="bg" aria-hidden="true">
   <canvas id="gl-canvas"></canvas>
-  <div class="scene-overlay"></div>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-  <div class="grid-lines"></div>
-  <div class="noise-layer"></div>
+  <div class="bg-mesh"></div>
+  <div class="bg-grain"></div>
 </div>
 
-<!-- AUTH SCREEN -->
+<!-- ═══════════ AUTH SCREEN ═══════════ -->
 <div id="auth-screen" class="auth-screen active">
-  <div class="auth-stage">
-    <div class="auth-brand">
-      <div class="brand-icon">
-        <div class="brand-ring r1"></div>
-        <div class="brand-ring r2"></div>
-        <div class="brand-ring r3"></div>
-        <span class="brand-letter">N</span>
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="al-brand">
+        <div class="al-logo">
+          <div class="logo-vinyl">
+            <div class="lv-ring r1"></div>
+            <div class="lv-ring r2"></div>
+            <div class="lv-ring r3"></div>
+            <div class="lv-center">N</div>
+          </div>
+        </div>
+        <div class="al-wordmark">
+          <span class="wm-n">Nova</span><span class="wm-b">Beats</span>
+        </div>
       </div>
-      <div class="brand-name">
-        <span class="brand-nova">Nova</span><span class="brand-beats">Beats</span>
+      <div class="al-headline">
+        <h1>Your sound.<br/>Your world.</h1>
+        <p>Stream, discover, and share music with the people who matter.</p>
       </div>
-      <p class="brand-tagline">Where sound becomes art</p>
+      <div class="al-features">
+        <div class="alf"><div class="alf-dot"></div><span>Upload & share your music</span></div>
+        <div class="alf"><div class="alf-dot"></div><span>Follow artists you love</span></div>
+        <div class="alf"><div class="alf-dot"></div><span>Build your personal library</span></div>
+      </div>
+      <div class="al-wave">
+        <svg viewBox="0 0 400 80" preserveAspectRatio="none">
+          <path d="M0,40 Q50,0 100,40 Q150,80 200,40 Q250,0 300,40 Q350,80 400,40" stroke="url(#wg)" stroke-width="2" fill="none"/>
+          <defs><linearGradient id="wg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="var(--a1)" stop-opacity="0"/><stop offset="50%" stop-color="var(--a1)"/><stop offset="100%" stop-color="var(--a2)" stop-opacity="0"/></linearGradient></defs>
+        </svg>
+      </div>
     </div>
+  </div>
+  <div class="auth-right">
     <div class="auth-card" id="auth-card">
-      <!-- Dynamically built -->
+      <!-- Dynamically filled by renderAuth() -->
     </div>
   </div>
 </div>
 
 <!-- TOAST -->
 <div id="toast" class="toast">
-  <div class="toast-dot"></div>
+  <i class="fa-solid fa-check toast-ico"></i>
   <span id="toast-msg">Done</span>
 </div>
 
-<!-- APP -->
+<!-- ═══════════ MAIN APP ═══════════ -->
 <div id="app" class="app hidden">
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-      <div class="sidebar-logo">
-        <div class="logo-gem">
-          <div class="gem-face f1"></div>
-          <div class="gem-face f2"></div>
-          <div class="gem-face f3"></div>
-          <span>N</span>
-        </div>
-        <div class="logo-wordmark">
-          <span class="wm-nova">Nova</span><span class="wm-beats">Beats</span>
-        </div>
+    <div class="sb-logo">
+      <div class="sb-vinyl">
+        <div class="sbv-r r1"></div>
+        <div class="sbv-r r2"></div>
+        <span>N</span>
       </div>
+      <span class="sb-wm"><em>Nova</em>Beats</span>
     </div>
 
-    <nav class="nav">
-      <div class="nav-group-label">Discover</div>
+    <nav class="sb-nav">
+      <p class="sb-label">Discover</p>
       <a href="#" class="nav-link active" data-view="home">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-house-music"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-house"></i>
         <span>Home</span>
       </a>
       <a href="#" class="nav-link" data-view="search">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-magnifying-glass"></i>
         <span>Search</span>
       </a>
       <a href="#" class="nav-link" data-view="albums">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-record-vinyl"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-record-vinyl"></i>
         <span>Albums</span>
       </a>
       <a href="#" class="nav-link" data-view="feed">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-bolt"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-rss"></i>
         <span>Feed</span>
       </a>
 
-      <div class="nav-group-label">Library</div>
+      <p class="sb-label" style="margin-top:8px">Library</p>
       <a href="#" class="nav-link" data-view="liked">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-heart"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-heart"></i>
         <span>Liked Songs</span>
-        <span class="nl-badge" id="liked-count">0</span>
+        <span class="nl-count" id="liked-count">0</span>
       </a>
 
-      <div class="nav-group-label artist-only hidden">Create</div>
+      <p class="sb-label artist-only hidden" style="margin-top:8px">Create</p>
       <a href="#" class="nav-link artist-only hidden" data-view="upload">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-arrow-up-from-bracket"></i>
         <span>Upload</span>
       </a>
       <a href="#" class="nav-link artist-only hidden" data-view="create-album">
-        <div class="nav-pip"></div>
-        <div class="nl-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <span class="nl-bar"></span>
+        <i class="fa-solid fa-layer-group"></i>
         <span>New Album</span>
       </a>
     </nav>
 
-    <div class="sidebar-footer">
+    <div class="sb-bottom">
       <div class="now-mini hidden" id="now-mini">
-        <div class="nm-equalizer"><span></span><span></span><span></span><span></span></div>
+        <div class="nm-bars">
+          <span></span><span></span><span></span><span></span>
+        </div>
         <span class="nm-title" id="nm-title">—</span>
       </div>
       <div class="user-card" id="user-card">
-        <div class="uc-avatar" id="uc-avatar">U</div>
-        <div class="uc-info">
+        <div class="uc-av" id="uc-avatar">U</div>
+        <div class="uc-meta">
           <span class="uc-name" id="uc-name">User</span>
           <span class="uc-role" id="uc-role">listener</span>
         </div>
-        <button class="uc-logout" id="logout-btn" title="Logout">
+        <button class="uc-out" id="logout-btn" title="Logout">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
         </button>
       </div>
     </div>
   </aside>
 
-  <!-- MOBILE NAV BAR -->
-  <nav class="mobile-nav" id="mobile-nav">
-    <a href="#" class="mn-item active" data-view="home"><i class="fa-solid fa-house"></i><span>Home</span></a>
-    <a href="#" class="mn-item" data-view="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>
-    <a href="#" class="mn-item" data-view="albums"><i class="fa-solid fa-record-vinyl"></i><span>Albums</span></a>
-    <a href="#" class="mn-item" data-view="feed"><i class="fa-solid fa-bolt"></i><span>Feed</span></a>
-    <a href="#" class="mn-item" data-view="liked"><i class="fa-solid fa-heart"></i><span>Liked</span></a>
-  </nav>
+  <!-- MOBILE TOPBAR -->
+  <div class="mob-top" id="mob-top">
+    <div class="mt-logo"><em>Nova</em>Beats</div>
+    <div class="mt-right">
+      <button class="mt-btn" id="profile-btn"><i class="fa-solid fa-user-pen"></i></button>
+      <button class="mt-btn" id="mobile-menu-btn"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </div>
 
   <!-- MAIN -->
   <main class="main" id="main">
 
     <!-- HOME -->
     <section id="view-home" class="view active">
-      <header class="view-head">
-        <div class="head-left">
-          <p class="head-eyebrow" id="greeting-time">Good evening</p>
-          <h1 class="head-title" id="greeting-name">Welcome back</h1>
+      <div class="page-head">
+        <div>
+          <p class="ph-time" id="greeting-time">Good evening</p>
+          <h1 class="ph-title" id="greeting-name">Welcome back</h1>
         </div>
-        <div class="head-actions">
-          <button class="icon-btn" id="profile-btn" title="Edit profile">
-            <i class="fa-solid fa-user-pen"></i>
-          </button>
-          <button class="icon-btn" id="mobile-menu-btn" title="Menu">
-            <i class="fa-solid fa-bars"></i>
-          </button>
+        <div class="ph-actions">
+          <button class="ph-btn" id="profile-btn-desk"><i class="fa-solid fa-user-pen"></i></button>
         </div>
-      </header>
+      </div>
 
-      <!-- HERO TRACK -->
-      <div class="hero-track" id="hero-track">
-        <div class="hero-bg"></div>
-        <div class="hero-waves">
-          <div class="wave-bar" style="--i:1"></div><div class="wave-bar" style="--i:2"></div>
-          <div class="wave-bar" style="--i:3"></div><div class="wave-bar" style="--i:4"></div>
-          <div class="wave-bar" style="--i:5"></div><div class="wave-bar" style="--i:6"></div>
-          <div class="wave-bar" style="--i:7"></div><div class="wave-bar" style="--i:8"></div>
-          <div class="wave-bar" style="--i:9"></div><div class="wave-bar" style="--i:10"></div>
-          <div class="wave-bar" style="--i:11"></div><div class="wave-bar" style="--i:12"></div>
-          <div class="wave-bar" style="--i:13"></div><div class="wave-bar" style="--i:14"></div>
-          <div class="wave-bar" style="--i:15"></div><div class="wave-bar" style="--i:16"></div>
+      <!-- HERO -->
+      <div class="hero" id="hero-track">
+        <div class="hero-glow"></div>
+        <div class="hero-info">
+          <span class="hero-pill">🔥 Trending Now</span>
+          <h2 class="hero-song" id="hero-title">Loading…</h2>
+          <p class="hero-artist" id="hero-artist">—</p>
+          <button class="hero-play" id="hero-play-btn">
+            <span class="hp-icon"><i class="fa-solid fa-play"></i></span>
+            <span>Play Now</span>
+          </button>
         </div>
-        <div class="hero-content">
-          <div class="hero-label">🔥 TRENDING NOW</div>
-          <h2 class="hero-song-title" id="hero-title">Loading…</h2>
-          <p class="hero-artist-name" id="hero-artist">—</p>
-          <div class="hero-btns">
-            <button class="play-hero-btn" id="hero-play-btn">
-              <i class="fa-solid fa-play"></i>
-              <span>Play Now</span>
-            </button>
+        <div class="hero-visual">
+          <div class="hv-disc" id="hero-disc">
+            <div class="hd-outer"></div>
+            <div class="hd-mid"></div>
+            <div class="hd-label">NB</div>
+            <div class="hd-hole"></div>
+            <div class="hd-shine"></div>
           </div>
-        </div>
-        <div class="hero-disc" id="hero-disc">
-          <div class="disc-body">
-            <div class="disc-shine"></div>
-            <div class="disc-grooves"></div>
-            <div class="disc-label">NB</div>
-            <div class="disc-hole"></div>
+          <div class="hv-bars">
+            <span style="--d:0.0s"></span><span style="--d:0.1s"></span>
+            <span style="--d:0.2s"></span><span style="--d:0.3s"></span>
+            <span style="--d:0.15s"></span><span style="--d:0.25s"></span>
           </div>
         </div>
       </div>
 
-      <div class="row-header">
-        <h3 class="row-title">All Tracks</h3>
-        <div class="chip-row" id="chip-row">
+      <div class="sec-row">
+        <h3 class="sec-title">All Tracks</h3>
+        <div class="chips" id="chip-row">
           <button class="chip active" data-filter="all">All</button>
           <button class="chip" data-filter="recent">Recent</button>
         </div>
@@ -208,45 +212,43 @@
 
     <!-- SEARCH -->
     <section id="view-search" class="view">
-      <header class="view-head">
-        <h1 class="head-title">Search</h1>
-        <p class="head-sub">Find tracks, albums and artists</p>
-      </header>
-      <div class="search-wrap">
-        <div class="search-field">
-          <i class="fa-solid fa-magnifying-glass sf-icon"></i>
-          <input type="text" id="search-input" class="sf-input" placeholder="What do you want to listen to?"/>
-          <button class="sf-clear hidden" id="search-clear"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="search-tabs" id="search-tabs">
-          <button class="stab active" data-type="all">All</button>
-          <button class="stab" data-type="tracks">Tracks</button>
-          <button class="stab" data-type="albums">Albums</button>
-          <button class="stab" data-type="artists">Artists</button>
+      <div class="page-head">
+        <div>
+          <h1 class="ph-title">Search</h1>
+          <p class="ph-sub">Find tracks, albums and artists</p>
         </div>
       </div>
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass sb-ico"></i>
+        <input type="text" id="search-input" class="search-inp" placeholder="What do you want to hear?"/>
+        <button class="sb-clear hidden" id="search-clear"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="stabs" id="search-tabs">
+        <button class="stab active" data-type="all">All</button>
+        <button class="stab" data-type="tracks">Tracks</button>
+        <button class="stab" data-type="albums">Albums</button>
+        <button class="stab" data-type="artists">Artists</button>
+      </div>
       <div id="search-results" class="search-results">
-        <div class="search-splash">
-          <div class="splash-icon">🎵</div>
-          <p>Start typing to explore music</p>
+        <div class="sr-empty">
+          <div class="sre-icon">🎵</div>
+          <p>Start typing to explore</p>
         </div>
       </div>
     </section>
 
     <!-- LIKED -->
     <section id="view-liked" class="view">
-      <header class="liked-header">
-        <div class="liked-cover">
-          <i class="fa-solid fa-heart"></i>
+      <div class="liked-hero">
+        <div class="lh-cover"><i class="fa-solid fa-heart"></i></div>
+        <div class="lh-info">
+          <p class="ph-time">Your Collection</p>
+          <h1 class="ph-title">Liked Songs</h1>
+          <p class="lh-count" id="liked-count-text">0 songs</p>
         </div>
-        <div class="liked-meta">
-          <p class="head-eyebrow">Your Collection</p>
-          <h1 class="head-title">Liked Songs</h1>
-          <p class="liked-count-label" id="liked-count-text">0 songs</p>
-        </div>
-      </header>
+      </div>
       <div id="liked-list" class="liked-list">
-        <div class="empty-msg">
+        <div class="empty-state">
           <i class="fa-regular fa-heart"></i>
           <p>Songs you like will appear here</p>
         </div>
@@ -255,24 +257,28 @@
 
     <!-- FEED -->
     <section id="view-feed" class="view">
-      <header class="view-head">
-        <h1 class="head-title">Your Feed</h1>
-        <p class="head-sub">Latest from artists you follow</p>
-      </header>
+      <div class="page-head">
+        <div>
+          <h1 class="ph-title">Feed</h1>
+          <p class="ph-sub">Latest from artists you follow</p>
+        </div>
+      </div>
       <div class="track-grid" id="feed-grid">
         <div class="skel"></div><div class="skel"></div><div class="skel"></div>
       </div>
     </section>
 
-    <!-- ARTIST PROFILE -->
+    <!-- ARTIST -->
     <section id="view-artist" class="view"></section>
 
     <!-- ALBUMS -->
     <section id="view-albums" class="view">
-      <header class="view-head">
-        <h1 class="head-title">Albums</h1>
-        <p class="head-sub">Browse the full collection</p>
-      </header>
+      <div class="page-head">
+        <div>
+          <h1 class="ph-title">Albums</h1>
+          <p class="ph-sub">Browse the full collection</p>
+        </div>
+      </div>
       <div class="album-grid" id="albums-grid">
         <div class="skel"></div><div class="skel"></div><div class="skel"></div>
       </div>
@@ -280,38 +286,40 @@
 
     <!-- ALBUM DETAIL -->
     <section id="view-album-detail" class="view">
-      <button class="back-pill" id="back-to-albums">
-        <i class="fa-solid fa-arrow-left"></i> Albums
+      <button class="back-btn" id="back-to-albums">
+        <i class="fa-solid fa-arrow-left"></i> Back to Albums
       </button>
       <div id="album-detail-content"></div>
     </section>
 
     <!-- UPLOAD -->
     <section id="view-upload" class="view">
-      <header class="view-head">
-        <h1 class="head-title">Upload Track</h1>
-        <p class="head-sub">Share your music with the world</p>
-      </header>
-      <form id="upload-form" class="form-card">
-        <div class="form-field">
-          <label class="fl">Track Title</label>
-          <div class="fi-wrap">
-            <i class="fa-solid fa-music fi-icon"></i>
+      <div class="page-head">
+        <div>
+          <h1 class="ph-title">Upload Track</h1>
+          <p class="ph-sub">Share your music with the world</p>
+        </div>
+      </div>
+      <form id="upload-form" class="form-panel">
+        <div class="fp-field">
+          <label class="fp-label">Track Title</label>
+          <div class="fp-input-wrap">
+            <i class="fa-solid fa-music fp-ico"></i>
             <input type="text" id="upload-title" placeholder="Name your track" required/>
           </div>
         </div>
-        <div class="form-field">
-          <label class="fl">Audio File</label>
+        <div class="fp-field">
+          <label class="fp-label">Audio File</label>
           <div class="drop-zone" id="file-drop-zone">
-            <div class="dz-icon"><i class="fa-solid fa-arrow-up-from-bracket"></i></div>
+            <i class="fa-solid fa-arrow-up-from-bracket dz-ico"></i>
             <span id="file-label">Drop audio here or click to browse</span>
-            <span class="dz-hint">MP3, WAV, FLAC</span>
+            <span class="dz-hint">MP3, WAV, FLAC supported</span>
             <input type="file" id="upload-file" accept="audio/*" hidden required/>
           </div>
         </div>
-        <div id="upload-error" class="field-error"></div>
-        <div id="upload-success" class="field-ok"></div>
-        <button type="submit" class="btn-cta" id="upload-btn">
+        <div id="upload-error" class="fp-err"></div>
+        <div id="upload-success" class="fp-ok"></div>
+        <button type="submit" class="fp-btn" id="upload-btn">
           <i class="fa-solid fa-arrow-up-from-bracket"></i><span>Upload Track</span>
         </button>
       </form>
@@ -319,115 +327,126 @@
 
     <!-- CREATE ALBUM -->
     <section id="view-create-album" class="view">
-      <header class="view-head">
-        <h1 class="head-title">Create Album</h1>
-        <p class="head-sub">Curate your tracks into an album</p>
-      </header>
-      <form id="album-form" class="form-card">
-        <div class="form-field">
-          <label class="fl">Album Title</label>
-          <div class="fi-wrap">
-            <i class="fa-solid fa-record-vinyl fi-icon"></i>
+      <div class="page-head">
+        <div>
+          <h1 class="ph-title">Create Album</h1>
+          <p class="ph-sub">Curate your tracks into an album</p>
+        </div>
+      </div>
+      <form id="album-form" class="form-panel">
+        <div class="fp-field">
+          <label class="fp-label">Album Title</label>
+          <div class="fp-input-wrap">
+            <i class="fa-solid fa-record-vinyl fp-ico"></i>
             <input type="text" id="album-title" placeholder="Name your album" required/>
           </div>
         </div>
-        <div class="form-field">
-          <label class="fl">Select Tracks</label>
-          <div id="track-checklist" class="track-checklist"><p class="muted-txt">Loading…</p></div>
+        <div class="fp-field">
+          <label class="fp-label">Select Tracks</label>
+          <div id="track-checklist" class="track-checklist">
+            <p class="muted-txt">Loading your tracks…</p>
+          </div>
         </div>
-        <div id="album-error" class="field-error"></div>
-        <div id="album-success" class="field-ok"></div>
-        <button type="submit" class="btn-cta">
+        <div id="album-error" class="fp-err"></div>
+        <div id="album-success" class="fp-ok"></div>
+        <button type="submit" class="fp-btn">
           <i class="fa-solid fa-layer-group"></i><span>Create Album</span>
         </button>
       </form>
     </section>
 
   </main>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mob-nav" id="mob-nav">
+    <a href="#" class="mn-item active" data-view="home"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="#" class="mn-item" data-view="search"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></a>
+    <a href="#" class="mn-item" data-view="albums"><i class="fa-solid fa-record-vinyl"></i><span>Albums</span></a>
+    <a href="#" class="mn-item" data-view="feed"><i class="fa-solid fa-rss"></i><span>Feed</span></a>
+    <a href="#" class="mn-item" data-view="liked"><i class="fa-solid fa-heart"></i><span>Liked</span></a>
+  </nav>
 </div>
 
 <!-- SHARE MODAL -->
-<div id="share-modal" class="modal-bg hidden">
-  <div class="modal-card">
-    <div class="modal-top">
+<div id="share-modal" class="modal-wrap hidden">
+  <div class="modal">
+    <div class="modal-head">
       <h3>Share Track</h3>
-      <button class="modal-x" id="share-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      <button class="modal-close" id="share-modal-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="share-info">
-      <div class="share-art"><i class="fa-solid fa-music"></i></div>
+    <div class="share-track">
+      <div class="st-art"><i class="fa-solid fa-music"></i></div>
       <div>
-        <div class="share-track-name" id="share-title">Track</div>
-        <div class="share-track-artist" id="share-artist">Artist</div>
+        <div class="st-name" id="share-title">Track</div>
+        <div class="st-artist" id="share-artist">Artist</div>
       </div>
     </div>
-    <div class="share-link-row">
-      <input type="text" id="share-link-input" class="share-link-input" readonly/>
-      <button class="copy-btn" id="copy-link-btn"><i class="fa-solid fa-copy"></i></button>
+    <div class="share-link">
+      <input type="text" id="share-link-input" readonly/>
+      <button class="sl-copy" id="copy-link-btn"><i class="fa-solid fa-copy"></i></button>
     </div>
-    <div class="share-btns">
-      <button class="share-platform wp" id="share-whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-      <button class="share-platform tw" id="share-twitter"><i class="fa-brands fa-x-twitter"></i> Twitter</button>
+    <div class="share-row">
+      <button class="share-btn wp" id="share-whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+      <button class="share-btn tw" id="share-twitter"><i class="fa-brands fa-x-twitter"></i> Twitter</button>
     </div>
   </div>
 </div>
 
-<!-- COMMENTS DRAWER -->
-<div id="comments-panel" class="comments-panel">
-  <div class="cp-header">
-    <div class="cp-title">
-      <i class="fa-regular fa-comment"></i>
+<!-- COMMENTS PANEL -->
+<div id="comments-panel" class="cp">
+  <div class="cp-head">
+    <div class="cph-left">
+      <i class="fa-regular fa-comment-dots"></i>
       <h3>Comments</h3>
     </div>
-    <span class="cp-track-name" id="cp-track-name"></span>
-    <button class="modal-x" id="close-comments"><i class="fa-solid fa-xmark"></i></button>
+    <span class="cph-track" id="cp-track-name"></span>
+    <button class="modal-close" id="close-comments"><i class="fa-solid fa-xmark"></i></button>
   </div>
   <div class="cp-list" id="comments-list"></div>
-  <div class="cp-input-row">
+  <div class="cp-input">
     <input type="text" id="comment-input" placeholder="Add a comment…"/>
     <button id="post-comment-btn"><i class="fa-solid fa-paper-plane"></i></button>
   </div>
 </div>
-<div class="cp-backdrop hidden" id="cp-backdrop"></div>
+<div class="cp-bd hidden" id="cp-backdrop"></div>
 
 <!-- PLAYER -->
-<div id="player-bar" class="player-bar hidden">
-  <div class="pb-left">
-    <div class="pb-art" id="pb-art">
-      <div class="pb-art-pulse"></div>
+<div id="player-bar" class="player hidden">
+  <div class="pl-left">
+    <div class="pl-art" id="pb-art">
       <i class="fa-solid fa-music"></i>
+      <div class="pla-pulse"></div>
     </div>
-    <div class="pb-meta">
-      <div class="pb-title" id="player-title">—</div>
-      <div class="pb-artist" id="player-artist">—</div>
+    <div class="pl-meta">
+      <div class="pl-title" id="player-title">—</div>
+      <div class="pl-artist" id="player-artist">—</div>
     </div>
-    <button class="pb-icon-btn" id="player-like-btn">
-      <i class="fa-regular fa-heart"></i>
-    </button>
-    <button class="pb-icon-btn" id="open-comments-btn">
-      <i class="fa-regular fa-comment"></i>
-    </button>
+    <button class="pl-ic liked-ic" id="player-like-btn"><i class="fa-regular fa-heart"></i></button>
+    <button class="pl-ic" id="open-comments-btn"><i class="fa-regular fa-comment-dots"></i></button>
   </div>
-  <div class="pb-center">
-    <div class="pb-controls">
-      <button class="pb-ctrl" id="shuffle-btn"><i class="fa-solid fa-shuffle"></i></button>
-      <button class="pb-ctrl" id="prev-btn"><i class="fa-solid fa-backward-step"></i></button>
-      <button class="pb-ctrl pb-play" id="play-pause-btn"><i class="fa-solid fa-play"></i></button>
-      <button class="pb-ctrl" id="next-btn"><i class="fa-solid fa-forward-step"></i></button>
-      <button class="pb-ctrl" id="repeat-btn"><i class="fa-solid fa-repeat"></i></button>
+
+  <div class="pl-center">
+    <div class="pl-controls">
+      <button class="plc-btn" id="shuffle-btn" title="Shuffle"><i class="fa-solid fa-shuffle"></i></button>
+      <button class="plc-btn" id="prev-btn"><i class="fa-solid fa-backward-step"></i></button>
+      <button class="plc-btn plc-play" id="play-pause-btn"><i class="fa-solid fa-play"></i></button>
+      <button class="plc-btn" id="next-btn"><i class="fa-solid fa-forward-step"></i></button>
+      <button class="plc-btn" id="repeat-btn" title="Repeat"><i class="fa-solid fa-repeat"></i></button>
     </div>
-    <div class="pb-progress">
-      <span class="pb-time" id="time-current">0:00</span>
-      <div class="pb-track">
-        <input type="range" id="progress-bar" class="pb-range" min="0" max="100" value="0"/>
-        <div class="pb-fill" id="progress-fill"></div>
+    <div class="pl-prog">
+      <span class="pl-time" id="time-current">0:00</span>
+      <div class="pl-bar">
+        <input type="range" id="progress-bar" class="pl-range" min="0" max="100" value="0"/>
+        <div class="pl-fill" id="progress-fill"></div>
       </div>
-      <span class="pb-time" id="time-total">0:00</span>
+      <span class="pl-time" id="time-total">0:00</span>
     </div>
   </div>
-  <div class="pb-right">
-    <button class="pb-icon-btn" id="share-player-btn"><i class="fa-solid fa-share-nodes"></i></button>
-    <i class="fa-solid fa-volume-low pb-vol-icon"></i>
-    <input type="range" id="volume-slider" class="volume-range" min="0" max="1" step="0.01" value="0.8"/>
+
+  <div class="pl-right">
+    <button class="pl-ic" id="share-player-btn"><i class="fa-solid fa-share-nodes"></i></button>
+    <i class="fa-solid fa-volume-low pl-vol-ico"></i>
+    <input type="range" id="volume-slider" class="vol-range" min="0" max="1" step="0.01" value="0.8"/>
   </div>
 </div>
 
