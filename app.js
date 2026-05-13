@@ -81,7 +81,7 @@ let _resetToken    = null;
   gl.linkProgram(prog); gl.useProgram(prog);
 
   const N = 120;
-  const COLORS = [[0.42,0.36,0.95],[0.99,0.47,0.66],[0.0,0.8,0.79],[0.66,0.6,1.0],[0.99,0.79,0.43]];
+  const COLORS = [[0.49,0.44,0.99],[0.96,0.44,0.71],[0.13,0.83,0.93],[0.56,0.50,1.0],[0.7,0.5,1.0]];
   const pts = Array.from({length:N}, () => {
     const c = COLORS[Math.floor(Math.random()*COLORS.length)];
     return {
@@ -147,7 +147,7 @@ function initCanvas2D(canvas) {
   const ctx = canvas.getContext("2d");
   function resize() { canvas.width=innerWidth; canvas.height=innerHeight; }
   resize(); addEventListener("resize", resize);
-  const COLS=["108,92,231","253,121,168","0,206,201","162,155,254","253,203,110"];
+  const COLS=["124,111,253","244,114,182","34,211,238","142,128,255","192,132,252"];
   const pts = Array.from({length:80},()=>({
     x:Math.random()*innerWidth, y:Math.random()*innerHeight,
     dx:(Math.random()-.5)*.4, dy:(Math.random()-.5)*.4,
